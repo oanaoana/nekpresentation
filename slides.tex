@@ -41,9 +41,8 @@
 \author[Nicolas Offermans] % Presenting author in short form used in footline
 {
 	\underline{Nicolas Offermans}$^1$ \\
-	Philipp Schlatter$^1$ \\
-	Adam Peplinski$^1$ \\
-	Oana Marin$^2$
+    Oana Marin$^2$, Michel Schanen$^2$ \\
+	Adam Peplinski$^1$, Philipp Schlatter$^1$ 
 }
 % - Give the names in the same order as the appear in the paper.
 % - Underline the presenting author.
@@ -87,7 +86,7 @@
 
 
 %------------------------------------------------
-\section{Introduction}
+\section{Introduction - Motivation}
 %------------------------------------------------
 
 \begin{frame}{Introduction}{}
@@ -95,12 +94,88 @@
 \textbf{Outline:}
 
 \begin{itemize}
-\item Coarse grid solver
-\vspace{5mm}
+\item Motivation - Mesh refinement (h/p refinement)
+\item Scalable solver - Overlapping Schwarz
+\item Bottleneck - Coarse grid solver
+\item Preconditioning - AMG
 \item Parallelization of the AMG setup
 \vspace{5mm}
-\item My other projects
 \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Error estimators and Adaptive mesh refinement}{h-refinement}
+\textbf{Flow past a 2D cylinder:} Velocity magnitude - $Re=100$ - Pol. Order$ = 5$
+
+\centering
+  \includegraphics[trim={0 14.5cm 0 7.2cm},clip, width=0.8\linewidth]{vel_init} 
+\end{frame}
+
+\begin{frame}{Error estimators and Adaptive mesh refinement}{h-refinement}
+\textbf{Flow past a 2D cylinder:} Averaged error estimator - $Re=100$ - Pol. Order $= 5$
+
+Error estimators by C. Mavriplis.
+
+\centering
+  \includegraphics[trim={0 14.5cm 0 7.2cm},clip, width=0.8\linewidth]{err_est} 
+\end{frame}
+
+\begin{frame}{Error estimators and Adaptive mesh refinement}{h-refinement}
+\textbf{Flow past a 2D cylinder:} Velocity magnitude - $Re=100$ - Pol. Order$ = 5$
+
+\centering
+  \includegraphics[trim={0 18cm 3cm 10cm},clip, width=0.8\linewidth]{ref_cyl_velmagn} 
+\end{frame}
+
+\begin{frame}{P-refinement}
+
+\onslide<1->{
+\textbf{Objective:} Variable polynomial order over elements.
+
+\vspace{4mm}
+}
+
+\onslide<2->{
+\textbf{Status:}
+\begin{itemize}
+\item Interpolation operator at element boundaries.
+\item Gather scatter operator.
+\item \textit{axhelm} function implemented.
+\end{itemize}
+
+\vspace{4mm}
+}
+
+\onslide<3->{
+\textbf{Future:}
+\begin{itemize}
+\item Conjugate gradient solver.
+\item Heat equation.
+\end{itemize}
+}
+
+\end{frame}
+
+
+\section{Scalable solver}
+
+\begin{frame}{Scalable solver}{Overlapping Schwarz}
+
+\begin{itemize}
+\item Preconditioner for pressure operator: 
+\begin{equation*}
+M_0^{-1} := R_0 T_0^{-1} R_0^T + \sum_{k=1}^{K} R_k^T \tilde{T}_k^{-1} R_k.
+\end{equation*}
+
+\item Coarse grid part:
+\begin{align*}
+\Delta p & = r \\
+\Leftrightarrow M_0^{-1} \Delta p & = M_0^{-1}r \\
+\Leftrightarrow \underbrace{T_0^{-1}}_{A} \underbrace{R_0^T \Delta p}_{x} & = \underbrace{T_0^{-1} R_0^T r}_{b}
+\end{align*}
+\end{itemize}
+ADD HERE
 
 \end{frame}
 
@@ -145,7 +220,52 @@ Developed by J. Lottes.
 
 \end{frame}
 
-\section{AMG Setup}
+\section{Preconditioning}
+
+\begin{frame}{Preconditioning - AMG}{Motivation}
+\begin{itemize}
+\item Efficiency of XXT limited when $(P,n) > (10^4, 10^5)$.
+\item AMG is tunable.
+\item Scaling tests results (Turbulent pipe - $Re_{\tau} = 550$ - {\color{red} XXT} - {\color{blue} AMG}).
+
+\centering
+\includegraphics[width=0.7\linewidth]{BeskowReTau550.png}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{AMG procedure}
+
+\textbf{Current:}
+\begin{enumerate}
+\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="true"}).
+\vspace{3mm}
+\item \only<1-2>{Serial Matlab code.} \only<3>{\st{Serial Matlab code.}}
+\vspace{3mm}
+\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="false"}).
+\end{enumerate}
+
+\vspace{4mm}
+
+\onslide<2->{
+\textbf{Drawbacks:}
+\begin{itemize}
+\item Requires Matlab.
+\item Serial.
+\item External code.
+\end{itemize}
+}
+
+\vspace{4mm}
+
+\onslide<3->{
+\textbf{Future:}
+{\color{red} Parallel C} code (Shared memory - Openmp).
+}
+
+\end{frame}
+
+\section{Performant AMG -setup}
 
 \begin{frame}{AMG Setup}{Coarsening - Interpolation - Smoothing}
 
@@ -197,55 +317,6 @@ Developed by J. Lottes.
 \end{tikzpicture}
 \end{minipage}
 \end{frame}
-
-\section{Motivations}
-
-\begin{frame}{Motivations for AMG}
-\begin{itemize}
-\item Efficiency of XXT limited when $(P,n) > (10^4, 10^5)$.
-\item AMG is tunable.
-\item Scaling tests results (Turbulent pipe - $Re_{\tau} = 550$ - {\color{red} XXT} - {\color{blue} AMG}).
-
-\centering
-\includegraphics[width=0.7\linewidth]{BeskowReTau550.png}
-\end{itemize}
-
-\end{frame}
-
-\section{Procedure}
-
-\begin{frame}{AMG procedure}
-
-\textbf{Current:}
-\begin{enumerate}
-\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="true"}).
-\vspace{3mm}
-\item \only<1-2>{Serial Matlab code.} \only<3>{\st{Serial Matlab code.}}
-\vspace{3mm}
-\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="false"}).
-\end{enumerate}
-
-\vspace{4mm}
-
-\onslide<2->{
-\textbf{Drawbacks:}
-\begin{itemize}
-\item Requires Matlab.
-\item Serial.
-\item External code.
-\end{itemize}
-}
-
-\vspace{4mm}
-
-\onslide<3->{
-\textbf{Future:}
-{\color{red} Parallel C} code (Shared memory - Openmp).
-}
-
-\end{frame}
-
-\section{C code and parallelization}
 
 \begin{frame}{C code}
 
@@ -319,63 +390,10 @@ First plot of some kind of scaling ???
 
 \end{frame}
 
-\section{Other projects}
-
-\begin{frame}{Other projects}{Error estimators and Adaptive mesh refinement}
-\textbf{Flow past a 2D cylinder:} Velocity magnitude - $Re=100$ - Pol. Order$ = 5$
-
-\centering
-  \includegraphics[trim={0 14.5cm 0 7.2cm},clip, width=0.8\linewidth]{vel_init} 
-\end{frame}
-
-\begin{frame}{Other projects}{Error estimators and Adaptive mesh refinement}
-\textbf{Flow past a 2D cylinder:} Averaged error estimator - $Re=100$ - Pol. Order $= 5$
-
-Error estimators by C. Mavriplis.
-
-\centering
-  \includegraphics[trim={0 14.5cm 0 7.2cm},clip, width=0.8\linewidth]{err_est} 
-\end{frame}
-
-\begin{frame}{Other projects}{Error estimators and Adaptive mesh refinement}
-\textbf{Flow past a 2D cylinder:} Velocity magnitude - $Re=100$ - Pol. Order$ = 5$
-
-\centering
-  \includegraphics[trim={0 18cm 3cm 10cm},clip, width=0.8\linewidth]{ref_cyl_velmagn} 
-\end{frame}
-
-\begin{frame}{Other projects}{P-refinement}
-
-\onslide<1->{
-\textbf{Objective:} Variable polynomial order over elements.
-
-\vspace{4mm}
-}
-
-\onslide<2->{
-\textbf{Status:}
-\begin{itemize}
-\item Interpolation operator at element boundaries.
-\item Gather scatter operator.
-\item \textit{axhelm} function implemented.
-\end{itemize}
-
-\vspace{4mm}
-}
-
-\onslide<3->{
-\textbf{Future:}
-\begin{itemize}
-\item Conjugate gradient solver.
-\item Heat equation.
-\end{itemize}
-}
-
-\end{frame}
-
 \begin{frame}
-\Huge{\centerline{The End}}
+\Huge{\centerline{Thank you!}}
 \end{frame}
+
 
 %----------------------------------------------------------------------------------------
 
