@@ -94,7 +94,7 @@
 \textbf{Outline:}
 
 \begin{itemize}
-\item Motivation - Mesh refinement (h/p refinement)
+\item Motivation - Mesh refinement ($h/p$ refinement)
 \item Scalable solver - Overlapping Schwarz
 \item Bottleneck - Coarse grid solver
 \item Preconditioning - AMG
@@ -140,8 +140,8 @@ Error estimators by C. Mavriplis.
 \textbf{Status:}
 \begin{itemize}
 \item Interpolation operator at element boundaries.
-\item Gather scatter operator.
-\item \textit{axhelm} function implemented.
+\item Gather-Scatter operator for p-refinement
+\item $\Delta \mathbf u$ discretized operator
 \end{itemize}
 
 \vspace{4mm}
@@ -150,8 +150,10 @@ Error estimators by C. Mavriplis.
 \onslide<3->{
 \textbf{Future:}
 \begin{itemize}
-\item Conjugate gradient solver.
-\item Heat equation.
+\item Error analysis study on Laplace operator
+\item First application equation: heat equation
+\item CG operator for implicit evaluation of $A u=b$
+\item Advection operator
 \end{itemize}
 }
 
@@ -234,38 +236,6 @@ Developed by J. Lottes.
 
 \end{frame}
 
-\begin{frame}{AMG procedure}
-
-\textbf{Current:}
-\begin{enumerate}
-\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="true"}).
-\vspace{3mm}
-\item \only<1-2>{Serial Matlab code.} \only<3>{\st{Serial Matlab code.}}
-\vspace{3mm}
-\item Nek5000 (\textit{IFAMG="true"} and \textit{IFAMG\_DUMP="false"}).
-\end{enumerate}
-
-\vspace{4mm}
-
-\onslide<2->{
-\textbf{Drawbacks:}
-\begin{itemize}
-\item Requires Matlab.
-\item Serial.
-\item External code.
-\end{itemize}
-}
-
-\vspace{4mm}
-
-\onslide<3->{
-\textbf{Future:}
-{\color{red} Parallel C} code (Shared memory - Openmp).
-}
-
-\end{frame}
-
-\section{Performant AMG -setup}
 
 \begin{frame}{AMG Setup}{Coarsening - Interpolation - Smoothing}
 
@@ -317,6 +287,33 @@ Developed by J. Lottes.
 \end{tikzpicture}
 \end{minipage}
 \end{frame}
+
+
+\begin{frame}{Current AMG status in repository}
+\textbf{Current status in repository}
+\begin{itemize}
+\item "offline" implementation
+\begin{itemize}
+\item freeze Nek5000 and dump matrix $A$ 
+\item load $A$ in Matlab and factorize it
+\item write to file to be loaded into Nek at runtime 
+\end{itemize}
+\item Prohibitive Matlab implementation (more memory needed for large problems)
+\item Advantage: preconditioner computed only once per simulation
+\end{itemize}
+
+\vspace{5mm}
+
+\textbf{Current work in branch on git}
+\begin{enumerate}
+\item C-serial version (90\% concluded translation Matlab -> C)
+\item Parallelism via threads/OpenMP/PETsc (work just started)
+\item Assess code design choices for most efficiency
+\end{enumerate}
+
+\end{frame}
+
+\section{Performant AMG -setup}
 
 \begin{frame}{C code}
 
